@@ -9,7 +9,7 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     env:
-      BOOMI_BASE_URL: "https://boomi.com{{ secrets.BOOMI_ACCOUNT_ID }}"
+      BOOMI_BASE_URL: "https://api.boomi.com/api/rest/v1/{{ secrets.BOOMI_ACCOUNT_ID }}"
       COMPONENT_ID: "your-component-id-here"
       ENVIRONMENT_ID: "your-target-env-id-here"
 
