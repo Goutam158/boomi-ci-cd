@@ -24,6 +24,7 @@ jobs:
           RESPONSE=$(curl -s -X POST "${{ env.BOOMI_BASE_URL }}/PackagedComponent" \
             -u "${{ secrets.BOOMI_USERNAME }}:${{ secrets.BOOMI_API_TOKEN }}" \
             -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
             -d '{
               "componentId": "${{ env.COMPONENT_ID }}",
               "packageVersion": "1.0.${{ github.run_number }}",
@@ -41,6 +42,7 @@ jobs:
           curl -s -X POST "${{ env.BOOMI_BASE_URL }}/DeployedPackage" \
             -u "${{ secrets.BOOMI_USERNAME }}:${{ secrets.BOOMI_API_TOKEN }}" \
             -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
             -d '{
               "packageId": "${{ env.PACKAGE_ID }}",
               "environmentId": "${{ env.ENVIRONMENT_ID }}",
