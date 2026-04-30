@@ -2,51 +2,48 @@ name: Boomi CI/CD Pipeline
 
 on:
   push:
-    branches:
-      - dev  # Trigger deployment when code is merged to dev
+    branches: [ "main" ]
+  workflow_dispatch: # Allows manual triggering
 
 jobs:
-  boomi-deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
     env:
-      BOOMI_ACCOUNT_ID: ${{ secrets.BOOMI_ACCOUNT_ID }}
-      BOOMI_API_TOKEN: ${{ secrets.BOOMI_API_TOKEN }}
-      PROCESS_COMPONENT_ID: "f48503f3-783d-4b85-983c-7ae9aed941fa" # Replace with your sample process ID
-      TARGET_ENV_ID: "e4dd5088-79d6-430e-8cf1-111483dfaad1" # Replace with your Training Account Environment ID
+      BOOMI_BASE_URL: "https://boomi.com{{ secrets.BOOMI_ACCOUNT_ID }}"
+      COMPONENT_ID: "your-component-id-here"
+      ENVIRONMENT_ID: "your-target-env-id-here"
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Create Packaged Component
+      # STEP 1: Create Packaged Component
+      - name: Create Boomi Package
         id: create_package
         run: |
-          RESPONSE=$(curl -X POST "https://boomi.com" \
-            -u "${{ secrets.BOOMI_USERNAME }}:$BOOMI_API_TOKEN" \
+          RESPONSE=$(curl -s -X POST "${{ env.BOOMI_BASE_URL }}/PackagedComponent" \
+            -u "${{ secrets.BOOMI_USERNAME }}:${{ secrets.BOOMI_API_TOKEN }}" \
             -H "Content-Type: application/json" \
-            -H "Accept: application/json" \
             -d '{
-              "componentId": "'"$PROCESS_COMPONENT_ID"'",
-              "componentType": "process",
-              "packageVersion": "v1.${{ github.run_number }}",
-              "notes": "Automated build from GitHub Action run ${{ github.run_number }}"
+              "componentId": "${{ env.COMPONENT_ID }}",
+              "packageVersion": "1.0.${{ github.run_number }}",
+              "notes": "Automated build from GitHub Actions"
             }')
           
-          # Extract Package ID from response
+          # Extract packageId from response
           PACKAGE_ID=$(echo $RESPONSE | jq -r '.packageId')
           echo "PACKAGE_ID=$PACKAGE_ID" >> $GITHUB_ENV
-          echo "Successfully created Package: $PACKAGE_ID"
+          echo "Created Package ID: $PACKAGE_ID"
 
+      # STEP 2: Deploy Package to Environment
       - name: Deploy to Environment
         run: |
-          curl -X POST "https://boomi.com" \
-            -u "${{ secrets.BOOMI_USERNAME }}:$BOOMI_API_TOKEN" \
+          curl -s -X POST "${{ env.BOOMI_BASE_URL }}/DeployedPackage" \
+            -u "${{ secrets.BOOMI_USERNAME }}:${{ secrets.BOOMI_API_TOKEN }}" \
             -H "Content-Type: application/json" \
-            -H "Accept: application/json" \
             -d '{
-              "packageId": "'"$PACKAGE_ID"'",
-              "environmentId": "'"$TARGET_ENV_ID"'",
-              "notes": "Deployed via CI/CD Pipeline"
+              "packageId": "${{ env.PACKAGE_ID }}",
+              "environmentId": "${{ env.ENVIRONMENT_ID }}",
+              "notes": "Deployed via GitHub Actions build ${{ github.run_number }}"
             }'
-          echo "Successfully deployed $PACKAGE_ID to $TARGET_ENV_ID"
-                                  
+          echo "Successfully deployed package ${{ env.PACKAGE_ID }} to ${{ env.ENVIRONMENT_ID }}"
