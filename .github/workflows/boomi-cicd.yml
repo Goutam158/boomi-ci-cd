@@ -10,8 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       BOOMI_BASE_URL: "https://api.boomi.com/api/rest/v1/{{ secrets.BOOMI_ACCOUNT_ID }}"
-      COMPONENT_ID: "your-component-id-here"
-      ENVIRONMENT_ID: "your-target-env-id-here"
+      COMPONENT_ID: "c7d1a9ce-a0d2-41dc-a90a-e01d61481d28"
+      ENVIRONMENT_ID: "e4dd5088-79d6-430e-8cf1-111483dfaad1"
 
     steps:
       - name: Checkout Code
