@@ -1,0 +1,44 @@
+name: Sync Boomi XML to GitHub
+
+on:
+  workflow_dispatch: # Allows you to click "Run Workflow" after finishing work in Boomi
+  schedule:
+    - cron: '*/5 * * * *' # Automatically syncs every night at midnight
+
+jobs:
+  sync-boomi:
+    runs-on: ubuntu-latest
+    env:
+      BOOMI_BASE_URL: "https://api.boomi.com/api/rest/v1/${{ secrets.BOOMI_ACCOUNT_ID }}"
+      COMPONENT_ID: "c7d1a9ce-a0d2-41dc-a90a-e01d61481d28"
+      ENVIRONMENT_ID: "e4dd5088-79d6-430e-8cf1-111483dfaad1"
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fetch Process XML from Boomi
+        run: |
+          mkdir -p processes
+          # Use the Boomi Component API to get the latest process configuration
+          curl -X GET "${{ env.BOOMI_BASE_URL }}/Component/${{ env.COMPONENT_ID }}" \
+            -u "${{ secrets.BOOMI_USERNAME }}:${{ secrets.BOOMI_API_TOKEN }}" \
+            -H "Accept: application/json" \
+            -o processes/my_process.json
+          
+          # Clean up the JSON for better Git diffing
+          cat processes/my_process.json | jq . > processes/my_process_formatted.json
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "Goutam158"
+          git config --global user.email "goutam.de158@gmail.com"
+          git add processes/
+          # Only commit if the XML has actually changed
+          if git diff --quiet && git diff --staged --quiet; then
+            echo "No changes detected in Boomi Platform."
+          else
+            git commit -m "Update Boomi process XML - Run ${{ github.run_number }}"
+            git push
+          fi
