@@ -29,7 +29,7 @@ jobs:
               "packageVersion": "1.0.${{ github.run_number }}",
               "notes": "Automated build from GitHub Actions"
             }')
-          
+          echo "API Response: $RESPONSE"
           # Extract packageId from response
           PACKAGE_ID=$(echo $RESPONSE | jq -r '.packageId')
           echo "PACKAGE_ID=$PACKAGE_ID" >> $GITHUB_ENV
